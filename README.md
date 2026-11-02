@@ -6,7 +6,7 @@
 
 **TextDrawFX** is a comprehensive, high-performance, lightweight, and plug-and-play visual effects, animation, and textdraw manipulation library engineered specifically for **San Andreas Multiplayer (SA-MP)** and **Open.MP**.
 
-It empowers Pawn developers to bring static GTA interfaces to life with rich visual effects: **True RGBA & Alpha Fading**, **Dynamic Scaling & Heartbeat Pulsing**, **Penner Easing Motion (Sliding)**, **Animated Numeric Counters**, **Cyberpunk Matrix Glyph Decryption**, **Cinematic Typewriter Reveals**, **Chromatic Alert Shifts**, and classical **Visibility Blinking**—all operating with zero external dependencies and mirrored support for both **PlayerTextDraws** (`PlayerText:textid`) and **Global TextDraws** (`Text:textid`).
+It empowers Pawn developers to bring static GTA interfaces to life with rich visual effects: **2D Physics Bounding Wall Reflection (DVD screensaver)**, **Circular Elastic Perimeter Bounce**, **Continuous Orbital Paths**, **Combat Trauma Screen Shake**, **Stochastic Broken Neon Flickering**, **Waveform Floating Drift**, **Dynamic Native Progress Bar Interpolation**, **Cyberpunk Chromatic Glitch Storms**, **True RGBA & Alpha Fading**, **Dynamic Scaling & Heartbeat Pulsing**, **Penner Easing Motion (Sliding)**, **Animated Numeric Counters**, **Cyberpunk Matrix Glyph Decryption**, **Cinematic Typewriter Reveals**, **Chromatic Alert Shifts**, and classical **Visibility Blinking**—all operating with zero external dependencies and mirrored support for both **PlayerTextDraws** (`PlayerText:textid`) and **Global TextDraws** (`Text:textid`).
 
 ---
 
@@ -39,11 +39,11 @@ You can customize the following configuration constants before including `<TextD
 | Constant | Default Value | Unit / Constraints | Description |
 | :--- | :---: | :---: | :--- |
 | `TDFX_MAX_FX` | `64` | Slots ($1$ - $512$) | Maximum concurrent animations active simultaneously across the server. |
-| `TDFX_MAX_TEXT` | `256` | Cells (Characters) | Maximum string buffer size allocated for typewriter/scramble handling. |
+| `TDFX_MAX_TEXT` | `256` | Cells (Characters) | Maximum string buffer size allocated for typewriter/scramble/glitch handling. |
 | `TDFX_MAX_TD` | `MAX_PLAYER_TEXT_DRAWS` (`256`) | Range ($1$ - $256$) | Maximum PlayerTextDraw IDs cached per player for SA-MP state fallback. |
 | `TDFX_MAX_GLOBAL_TD` | `MAX_TEXT_DRAWS` (`2048`) | Range ($1$ - $2048$) | Maximum Global TextDraw IDs cached for SA-MP state fallback. |
 | `TDFX_MIN_INTERVAL` | `30` | Milliseconds | Hard lower limit for animation timer intervals (prevents timer spam). |
-| `TDFX_FRAME_INTERVAL` | `40` | Milliseconds (25 FPS) | Internal tick rate for continuous interpolations (Fade, Scale, Slide, Count). |
+| `TDFX_FRAME_INTERVAL` | `40` | Milliseconds (25 FPS) | Internal tick rate for continuous interpolations (Fade, Scale, Slide, Bounce, Orbit). |
 
 ```pawn
 // Example: Tailoring memory footprint for lightweight servers
@@ -70,6 +70,14 @@ Passed to `OnPlayerTextDrawFXFinish` and `OnTextDrawFXFinish` to identify which 
 | `TDFX_TYPE_SLIDE` | `6` | Coordinate motion with easing curves. |
 | `TDFX_TYPE_COUNT` | `7` | Numeric counter interpolation. |
 | `TDFX_TYPE_SCRAMBLE` | `8` | Cyberpunk glyph decrypt effect. |
+| `TDFX_TYPE_BOUNCE` | `9` | 2D rectangular box bounce with velocity reflection and color shift. |
+| `TDFX_TYPE_BOUNCE_CIRC` | `10` | Elastic circular arena perimeter bounce. |
+| `TDFX_TYPE_ORBIT` | `11` | Continuous circular or elliptical orbital motion path. |
+| `TDFX_TYPE_SHAKE` | `12` | Combat trauma screen shake with exponential decay. |
+| `TDFX_TYPE_NEON` | `13` | Stochastic broken fluorescent tube malfunction / flicker. |
+| `TDFX_TYPE_WAVE` | `14` | Coupled dual-sine harmonic floating wave / drift. |
+| `TDFX_TYPE_PROGRESS` | `15` | Native smooth box width progress bar fill with easing. |
+| `TDFX_TYPE_GLITCH` | `16` | Cyberpunk chromatic glyph disturbance and micro-alpha glitching. |
 
 ### Easing Functions (`easing`)
 
@@ -231,7 +239,7 @@ Server-wide mirror of `PulsePlayerTextDraw` for Global TextDraws (`Text:textid`)
 
 ---
 
-### 3. Coordinate Motion (Sliding)
+### 3. Positional Motion & Physics
 
 #### `SlidePlayerTextDraw`
 ```pawn
@@ -246,7 +254,6 @@ Smoothly relocates a player textdraw across 2D screen coordinates from its curre
 * **`easing`:** Easing curve applied to the motion (defaults to `TDFX_EASE_OUT_QUAD` for natural UI deceleration).
 * **`extra_id`:** Optional identifier passed to `OnPlayerTextDrawFXFinish`.
 * **`callback[]`:** Optional targeted public function name.
-* **Remarks:** Coordinate repositioning requires runtime support for dynamic position updates (native on open.mp and SA-MP with the YSF plugin).
 * **Returns:** `1` on success, `0` on failure.
 
 #### `SlideTextDraw`
@@ -258,6 +265,155 @@ Server-wide mirror of `SlidePlayerTextDraw` for Global TextDraws (`Text:textid`)
 * **`targetX`, `targetY`:** Destination screen coordinates.
 * **`duration`:** Duration in milliseconds.
 * **`easing`:** Easing curve identifier.
+* **`extra_id`:** Optional identifier passed to `OnTextDrawFXFinish`.
+* **`callback[]`:** Optional targeted callback name.
+* **Returns:** `1` on success, `0` on failure.
+
+#### `BouncePlayerTextDraw`
+```pawn
+stock BouncePlayerTextDraw(playerid, PlayerText:textid, Float:speedX, Float:speedY, Float:minX, Float:minY, Float:maxX, Float:maxY, bool:colorShift = false, duration = 0, extra_id = 0, const callback[] = "");
+```
+Simulates the classic retro DVD screensaver: moves the textdraw in 2D space with a velocity vector `(speedX, speedY)` and bounces off rectangular boundary walls with velocity reflection, optional DVD color shifts, and corner hit detection.
+* **`playerid`:** The ID of the player.
+* **`textid`:** The `PlayerText:` handle to bounce.
+* **`speedX`:** Horizontal velocity vector per tick (pixels/frame).
+* **`speedY`:** Vertical velocity vector per tick (pixels/frame).
+* **`minX`, `minY`:** Top-left boundary box coordinates ($0.0$ to $640.0$).
+* **`maxX`, `maxY`:** Bottom-right boundary box coordinates ($0.0$ to $480.0$).
+* **`colorShift`:** Whether to alternate text color randomly from the vibrant DVD palette upon each wall collision (`false` by default).
+* **`duration`:** Total duration in milliseconds (`0` for indefinite looping until manually stopped).
+* **`extra_id`:** Optional identifier passed to `OnPlayerTextDrawFXFinish`.
+* **`callback[]`:** Optional targeted public function name.
+* **Returns:** `1` on success, `0` on failure.
+
+#### `BounceTextDraw`
+```pawn
+stock BounceTextDraw(Text:textid, Float:speedX, Float:speedY, Float:minX, Float:minY, Float:maxX, Float:maxY, bool:colorShift = false, duration = 0, extra_id = 0, const callback[] = "");
+```
+Server-wide mirror of `BouncePlayerTextDraw` for Global TextDraws (`Text:textid`).
+* **`textid`:** The `Text:` handle of the global textdraw.
+* **`speedX`, `speedY`:** Velocity vector per tick.
+* **`minX`, `minY`, `maxX`, `maxY`:** Bounding box limits.
+* **`colorShift`:** Whether to cycle colors on bounce.
+* **`duration`:** Total runtime in milliseconds (`0` for continuous).
+* **`extra_id`:** Optional identifier passed to `OnTextDrawFXFinish`.
+* **`callback[]`:** Optional targeted callback name.
+* **Returns:** `1` on success, `0` on failure.
+
+#### `BounceCirclePlayerTextDraw`
+```pawn
+stock BounceCirclePlayerTextDraw(playerid, PlayerText:textid, Float:speed, Float:angle, Float:centerX, Float:centerY, Float:radius, bool:colorShift = false, duration = 0, extra_id = 0, const callback[] = "");
+```
+Confines the textdraw inside a circular arena, reflecting its velocity along the radial collision surface normal upon contact with the circular perimeter.
+* **`playerid`:** The ID of the player.
+* **`textid`:** The `PlayerText:` handle to bounce.
+* **`speed`:** Movement speed scalar (pixels/frame).
+* **`angle`:** Initial movement heading in degrees ($0.0^\circ$ to $360.0^\circ$).
+* **`centerX`, `centerY`:** Center origin of the circular arena.
+* **`radius`:** Radius of the arena boundary in pixels.
+* **`colorShift`:** Whether to shift color upon each perimeter collision.
+* **`duration`:** Total duration in milliseconds (`0` for continuous).
+* **`extra_id`:** Optional identifier passed to `OnPlayerTextDrawFXFinish`.
+* **`callback[]`:** Optional targeted public function name.
+* **Returns:** `1` on success, `0` on failure.
+
+#### `BounceCircleTextDraw`
+```pawn
+stock BounceCircleTextDraw(Text:textid, Float:speed, Float:angle, Float:centerX, Float:centerY, Float:radius, bool:colorShift = false, duration = 0, extra_id = 0, const callback[] = "");
+```
+Server-wide mirror of `BounceCirclePlayerTextDraw` for Global TextDraws (`Text:textid`).
+* **`textid`:** The `Text:` handle of the global textdraw.
+* **`speed`:** Movement speed scalar.
+* **`angle`:** Initial direction angle in degrees.
+* **`centerX`, `centerY`:** Center origin.
+* **`radius`:** Boundary radius.
+* **`colorShift`:** Whether to cycle colors on bounce.
+* **`duration`:** Duration in milliseconds (`0` for continuous).
+* **`extra_id`:** Optional identifier passed to `OnTextDrawFXFinish`.
+* **`callback[]`:** Optional targeted callback name.
+* **Returns:** `1` on success, `0` on failure.
+
+#### `OrbitPlayerTextDraw`
+```pawn
+stock OrbitPlayerTextDraw(playerid, PlayerText:textid, Float:centerX, Float:centerY, Float:radiusX, Float:radiusY, Float:angularSpeed = 60.0, Float:startAngle = 0.0, duration = 0, extra_id = 0, const callback[] = "");
+```
+Guides the textdraw along a continuous, smooth circular or elliptical trigonometric orbital trajectory around an anchor coordinate.
+* **`playerid`:** The ID of the player.
+* **`textid`:** The `PlayerText:` handle to orbit.
+* **`centerX`, `centerY`:** Center origin around which the element rotates.
+* **`radiusX`:** Horizontal radius of the orbit ($X$-axis).
+* **`radiusY`:** Vertical radius of the orbit ($Y$-axis). Setting `radiusX == radiusY` produces a circular orbit.
+* **`angularSpeed`:** Speed of rotation in degrees per second (e.g. `90.0` completes one full rotation every $4$ seconds; negative values rotate counter-clockwise).
+* **`startAngle`:** Starting angular offset in degrees ($0.0^\circ$ to $360.0^\circ$, defaults to `0.0`).
+* **`duration`:** Total duration in milliseconds (`0` for continuous orbit).
+* **`extra_id`:** Optional identifier passed to `OnPlayerTextDrawFXFinish`.
+* **`callback[]`:** Optional targeted public function name.
+* **Returns:** `1` on success, `0` on failure.
+
+#### `OrbitTextDraw`
+```pawn
+stock OrbitTextDraw(Text:textid, Float:centerX, Float:centerY, Float:radiusX, Float:radiusY, Float:angularSpeed = 60.0, Float:startAngle = 0.0, duration = 0, extra_id = 0, const callback[] = "");
+```
+Server-wide mirror of `OrbitPlayerTextDraw` for Global TextDraws (`Text:textid`).
+* **`textid`:** The `Text:` handle of the global textdraw.
+* **`centerX`, `centerY`:** Pivot origin.
+* **`radiusX`, `radiusY`:** Horizontal and vertical radii.
+* **`angularSpeed`:** Angular speed in degrees per second.
+* **`startAngle`:** Starting phase angle.
+* **`duration`:** Duration in milliseconds (`0` for continuous).
+* **`extra_id`:** Optional identifier passed to `OnTextDrawFXFinish`.
+* **`callback[]`:** Optional targeted callback name.
+* **Returns:** `1` on success, `0` on failure.
+
+#### `ShakePlayerTextDraw`
+```pawn
+stock ShakePlayerTextDraw(playerid, PlayerText:textid, Float:intensity = 6.0, duration = 800, extra_id = 0, const callback[] = "");
+```
+Applies a high-frequency micro-displacement trauma screen shake with quadratic attenuation decay ($trauma^2 \cdot intensity$), automatically restoring base anchor coordinates upon completion.
+* **`playerid`:** The ID of the player.
+* **`textid`:** The `PlayerText:` handle to shake.
+* **`intensity`:** Maximum pixel displacement offset at maximum trauma (defaults to `6.0` pixels).
+* **`duration`:** Total duration of the shockwave impact in milliseconds (defaults to `800ms`).
+* **`extra_id`:** Optional identifier passed to `OnPlayerTextDrawFXFinish`.
+* **`callback[]`:** Optional targeted public function name.
+* **Returns:** `1` on success, `0` on failure.
+
+#### `ShakeTextDraw`
+```pawn
+stock ShakeTextDraw(Text:textid, Float:intensity = 6.0, duration = 800, extra_id = 0, const callback[] = "");
+```
+Server-wide mirror of `ShakePlayerTextDraw` for Global TextDraws (`Text:textid`).
+* **`textid`:** The `Text:` handle of the global textdraw.
+* **`intensity`:** Maximum pixel displacement.
+* **`duration`:** Impact duration in milliseconds.
+* **`extra_id`:** Optional identifier passed to `OnTextDrawFXFinish`.
+* **`callback[]`:** Optional targeted callback name.
+* **Returns:** `1` on success, `0` on failure.
+
+#### `WaveDriftPlayerTextDraw`
+```pawn
+stock WaveDriftPlayerTextDraw(playerid, PlayerText:textid, Float:amplitudeX, Float:amplitudeY, speedMs = 1500, duration = 0, extra_id = 0, const callback[] = "");
+```
+Generates a floating, organic wave hover motion using coupled harmonic dual-sine waves ($X = \sin(\theta), Y = \cos(1.5\theta)$), ideal for floating mission markers, underwater effects, or intoxicated vision.
+* **`playerid`:** The ID of the player.
+* **`textid`:** The `PlayerText:` handle to drift.
+* **`amplitudeX`:** Maximum horizontal oscillation distance in pixels.
+* **`amplitudeY`:** Maximum vertical oscillation distance in pixels.
+* **`speedMs`:** Time in milliseconds to complete one full sinusoidal cycle (defaults to `1500ms`).
+* **`duration`:** Total duration in milliseconds (`0` for continuous hover loop).
+* **`extra_id`:** Optional identifier passed to `OnPlayerTextDrawFXFinish`.
+* **`callback[]`:** Optional targeted public function name.
+* **Returns:** `1` on success, `0` on failure.
+
+#### `WaveDriftTextDraw`
+```pawn
+stock WaveDriftTextDraw(Text:textid, Float:amplitudeX, Float:amplitudeY, speedMs = 1500, duration = 0, extra_id = 0, const callback[] = "");
+```
+Server-wide mirror of `WaveDriftPlayerTextDraw` for Global TextDraws (`Text:textid`).
+* **`textid`:** The `Text:` handle of the global textdraw.
+* **`amplitudeX`, `amplitudeY`:** Oscillation amplitudes.
+* **`speedMs`:** Period duration in milliseconds.
+* **`duration`:** Total duration in milliseconds (`0` for continuous).
 * **`extra_id`:** Optional identifier passed to `OnTextDrawFXFinish`.
 * **`callback[]`:** Optional targeted callback name.
 * **Returns:** `1` on success, `0` on failure.
@@ -326,9 +482,95 @@ Server-wide mirror of `ScramblePlayerTextDraw` for Global TextDraws (`Text:texti
 * **`callback[]`:** Optional targeted callback name.
 * **Returns:** `1` on success, `0` on failure.
 
+#### `FillPlayerTextDrawProgress`
+```pawn
+stock FillPlayerTextDrawProgress(playerid, PlayerText:textid, Float:startWidth, Float:targetWidth, duration = 2000, easing = TDFX_EASE_OUT_QUAD, Float:lineHeight = 0.0, extra_id = 0, const callback[] = "");
+```
+Smoothly animates the width dimension of a textdraw background box over time using easing curves, creating native progress bars without requiring external plugins.
+* **`playerid`:** The ID of the player.
+* **`textid`:** The `PlayerText:` handle with box enabled (`UseBox(true)`).
+* **`startWidth`:** Initial box width in pixels.
+* **`targetWidth`:** Final target box width in pixels.
+* **`duration`:** Fill duration in milliseconds (defaults to `2000ms`).
+* **`easing`:** Easing formula (defaults to `TDFX_EASE_OUT_QUAD`).
+* **`lineHeight`:** Optional box height parameter. If set to `0.0`, uses the textdraw's existing cached height.
+* **`extra_id`:** Optional identifier passed to `OnPlayerTextDrawFXFinish`.
+* **`callback[]`:** Optional targeted public function name.
+* **Returns:** `1` on success, `0` on failure.
+
+#### `FillTextDrawProgress`
+```pawn
+stock FillTextDrawProgress(Text:textid, Float:startWidth, Float:targetWidth, duration = 2000, easing = TDFX_EASE_OUT_QUAD, Float:lineHeight = 0.0, extra_id = 0, const callback[] = "");
+```
+Server-wide mirror of `FillPlayerTextDrawProgress` for Global TextDraws (`Text:textid`).
+* **`textid`:** The `Text:` handle of the global textdraw.
+* **`startWidth`, `targetWidth`:** Initial and target box width dimensions.
+* **`duration`:** Fill duration in milliseconds.
+* **`easing`:** Easing formula.
+* **`lineHeight`:** Optional box height.
+* **`extra_id`:** Optional identifier passed to `OnTextDrawFXFinish`.
+* **`callback[]`:** Optional targeted callback name.
+* **Returns:** `1` on success, `0` on failure.
+
+#### `GlitchPlayerTextDraw`
+```pawn
+stock GlitchPlayerTextDraw(playerid, PlayerText:textid, const text[] = "", intensity = 2, duration = 3000, extra_id = 0, const callback[] = "");
+```
+Applies real-time Cyberpunk chromatic disturbance to a visible textdraw: sporadically corrupts random characters into cybernetic symbols and fluctuates opacity, restoring pristine text upon completion.
+* **`playerid`:** The ID of the player.
+* **`textid`:** The `PlayerText:` handle to glitch.
+* **`text[]`:** Optional explicit text string. If omitted, automatically reads the active text from open.mp or memory cache.
+* **`intensity`:** Number of simultaneous characters glitched per burst ($1$ to $5$, defaults to `2`).
+* **`duration`:** Glitch disturbance duration in milliseconds (`0` for continuous).
+* **`extra_id`:** Optional identifier passed to `OnPlayerTextDrawFXFinish`.
+* **`callback[]`:** Optional targeted public function name.
+* **Returns:** `1` on success, `0` on failure.
+
+#### `GlitchTextDraw`
+```pawn
+stock GlitchTextDraw(Text:textid, const text[] = "", intensity = 2, duration = 3000, extra_id = 0, const callback[] = "");
+```
+Server-wide mirror of `GlitchPlayerTextDraw` for Global TextDraws (`Text:textid`).
+* **`textid`:** The `Text:` handle of the global textdraw.
+* **`text[]`:** Optional text string.
+* **`intensity`:** Glitch intensity ($1$ to $5$).
+* **`duration`:** Duration in milliseconds (`0` for continuous).
+* **`extra_id`:** Optional identifier passed to `OnTextDrawFXFinish`.
+* **`callback[]`:** Optional targeted callback name.
+* **Returns:** `1` on success, `0` on failure.
+
 ---
 
-### 5. Visual Blinking & Typewriter
+### 5. Fluorescent & Atmospheric FX
+
+#### `NeonFlickerPlayerTextDraw`
+```pawn
+stock NeonFlickerPlayerTextDraw(playerid, PlayerText:textid, duration = 3000, brokenRatio = 40, extra_id = 0, const callback[] = "");
+```
+Simulates the stochastic flickering of a malfunctioning neon sign or fluorescent gas tube: rapid micro-sparks, temporary dropouts, and settling into a stable solid glow.
+* **`playerid`:** The ID of the player.
+* **`textid`:** The `PlayerText:` handle to flicker.
+* **`duration`:** Total duration of the malfunction effect in milliseconds (defaults to `3000ms`).
+* **`brokenRatio`:** Percentage of instability and spark dropouts ($0\%$ to $100\%$, defaults to `40%`).
+* **`extra_id`:** Optional identifier passed to `OnPlayerTextDrawFXFinish`.
+* **`callback[]`:** Optional targeted public function name.
+* **Returns:** `1` on success, `0` on failure.
+
+#### `NeonFlickerTextDraw`
+```pawn
+stock NeonFlickerTextDraw(Text:textid, duration = 3000, brokenRatio = 40, extra_id = 0, const callback[] = "");
+```
+Server-wide mirror of `NeonFlickerPlayerTextDraw` for Global TextDraws (`Text:textid`).
+* **`textid`:** The `Text:` handle of the global textdraw.
+* **`duration`:** Total duration in milliseconds.
+* **`brokenRatio`:** Instability ratio ($0\%$ to $100\%$).
+* **`extra_id`:** Optional identifier passed to `OnTextDrawFXFinish`.
+* **`callback[]`:** Optional targeted callback name.
+* **Returns:** `1` on success, `0` on failure.
+
+---
+
+### 6. Visual Blinking & Typewriter
 
 #### `BlinkPlayerTextDraw`
 ```pawn
@@ -365,13 +607,13 @@ Server-wide mirror of `BlinkPlayerTextDraw` for Global TextDraws (`Text:textid`)
 
 ---
 
-### 6. Animation Control & Queries
+### 7. Animation Control & Queries
 
 #### `StopPlayerTextDrawFX`
 ```pawn
 stock StopPlayerTextDrawFX(playerid, PlayerText:textid);
 ```
-Immediately stops any active animation running on the specified player textdraw. Terminates active timers, restores original base visual properties (colors, dimensions, strings), and leaves the textdraw in a clean, stable state.
+Immediately stops any active animation running on the specified player textdraw. Terminates active timers, restores original base visual properties (colors, dimensions, strings, coordinates), and leaves the textdraw in a clean, stable state.
 * **`playerid`:** The ID of the player.
 * **`textid`:** The PlayerTextDraw handle to stop.
 * **Returns:** `1` on success, `0` if no effect was active on the textdraw.
@@ -403,7 +645,7 @@ Checks whether a Global TextDraw is currently executing any active animation.
 
 ---
 
-### 7. Lifecycle Callbacks
+### 8. Lifecycle Callbacks
 
 #### `OnPlayerTextDrawFXFinish`
 ```pawn
@@ -412,7 +654,7 @@ forward OnPlayerTextDrawFXFinish(playerid, PlayerText:textid, fx_type, extra_id)
 Called when a PlayerTextDraw animation completes. Triggered only when the animation was started with `extra_id != 0`, guaranteeing zero overhead for unmonitored animations.
 * **`playerid`:** The ID of the player who owns the textdraw.
 * **`textid`:** The `PlayerText:` handle that finished animating.
-* **`fx_type`:** The type of effect that concluded (`TDFX_TYPE_FADE`, `TDFX_TYPE_SCALE`, etc.).
+* **`fx_type`:** The type of effect that concluded (`TDFX_TYPE_FADE`, `TDFX_TYPE_BOUNCE`, `TDFX_TYPE_PROGRESS`, etc.).
 * **`extra_id`:** The user-defined identifier supplied when initiating the animation.
 
 #### `OnTextDrawFXFinish`
@@ -455,6 +697,19 @@ A turnkey interactive demonstration filterscript ([`FS_TextDrawFX_Demo.pwn`](FS_
 
 <details>
 <summary>Show the version history</summary>
+
+### 2.1.0 - 02/11/2026
+* Feature-packed expansion introducing 2D runtime physics, orbital geometry, and atmospheric FX:
+  * Added **Retro DVD / CRT Box Bounce** (`BouncePlayerTextDraw`, `BounceTextDraw`): 2D elastic velocity reflection inside rectangular bounding boxes with optional classic DVD color shifting and corner hit detection.
+  * Added **Circular Perimeter Bounce** (`BounceCirclePlayerTextDraw`, `BounceCircleTextDraw`): 2D radial elastic boundary reflection using dynamic surface normal vectors.
+  * Added **Orbital Motion Path** (`OrbitPlayerTextDraw`, `OrbitTextDraw`): Continuous trigonometric circular or elliptical paths around a configurable pivot center with angular velocity.
+  * Added **Trauma Screen Shake** (`ShakePlayerTextDraw`, `ShakeTextDraw`): Realistic combat/explosion feedback with quadratic trauma decay and automatic anchor restoration.
+  * Added **Broken Neon Flicker** (`NeonFlickerPlayerTextDraw`, `NeonFlickerTextDraw`): Stochastic atmospheric flickering simulating malfunctioning fluorescent gas discharge lamps with micro-sparks, blackouts, and steady settling.
+  * Added **Waveform Floating Drift** (`WaveDriftPlayerTextDraw`, `WaveDriftTextDraw`): Coupled dual-sine harmonic oscillation for gentle UI floating, underwater, or intoxicated vision effects.
+  * Added **Dynamic Native Progress Fill** (`FillPlayerTextDrawProgress`, `FillTextDrawProgress`): Smooth interpolation of box width using Penner easing curves without requiring external progress bar plugins.
+  * Added **Cyberpunk Chromatic Glitch** (`GlitchPlayerTextDraw`, `GlitchTextDraw`): Real-time stochastic glyph corruption and micro-alpha fluctuations while preserving original text integrity.
+  * Full mirrored global support across all new functions for server-wide TextDraws (`Text:textid`).
+  * Expanded demonstration suite filterscript (`FS_TextDrawFX_Demo.pwn`) with interactive testing for all 17 distinct visual animation modes.
 
 ### 2.0.0 - 02/11/2026
 * Major release with full animation engine overhaul:
