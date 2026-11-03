@@ -1,0 +1,11 @@
+# Server and compiler runtime logs
+log.txt
+server_log.txt
+omp-server.log
+chatlog.txt
+*.log
+
+# Build & packaging artifacts
+package/
+dist/
+release-notes.md

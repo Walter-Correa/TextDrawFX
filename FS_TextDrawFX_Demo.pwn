@@ -5,13 +5,12 @@
     animations, and transitions on SA-MP and Open.MP.
 
     Author:      Walter Correa
-    Version:     2.1.0
+    Version:     2.2.0
     Repository:  https://github.com/Walter-Correa/TextDrawFX
     License:     Mozilla Public License 2.0 (MPL-2.0)
 
     Dependencies:
-    - TextDrawFX (TextDrawFX.inc v2.0.0)
-    - Pawn.CMD by urShadow (https://github.com/urShadow/Pawn.CMD)
+    - TextDrawFX (TextDrawFX.inc v2.2.0)
 ================================================================================
 */
 
@@ -26,7 +25,6 @@
 	#endif
 #endif
 
-#include <Pawn.CMD>
 #include "TextDrawFX.inc"
 
 // -----------------------------------------------------------------------------
@@ -82,6 +80,26 @@ enum
 	PREVIEW_WAVE,
 	PREVIEW_PROGRESS,
 	PREVIEW_GLITCH,
+	PREVIEW_FIREWORK,
+	PREVIEW_SPIN3D,
+	PREVIEW_HOVER3D,
+	PREVIEW_SHIMMER,
+	PREVIEW_RAINBOW,
+	PREVIEW_SLOT,
+	PREVIEW_PENDULUM,
+	PREVIEW_SLAM,
+	PREVIEW_VORTEX,
+	PREVIEW_LETTERBOX,
+	PREVIEW_SONAR,
+	PREVIEW_WAVESWEEP,
+	PREVIEW_LETTERRAIN,
+	PREVIEW_SCANNER,
+	PREVIEW_ELECTRIC,
+	PREVIEW_SPLITFLAP,
+	PREVIEW_HOLOGRAM,
+	PREVIEW_SHOCKWAVE,
+	PREVIEW_WAVEMOTION,
+	PREVIEW_HOPLETTER,
 	PREVIEW_GLOBAL,
 	PREVIEW_CHAIN,
 	PREVIEW_TOTAL
@@ -109,6 +127,27 @@ enum
 #define EVENT_PREVIEW_WAVE         (119)
 #define EVENT_PREVIEW_PROGRESS     (120)
 #define EVENT_PREVIEW_GLITCH       (121)
+#define EVENT_PREVIEW_FIREWORK     (122)
+#define EVENT_PREVIEW_SPIN3D       (123)
+#define EVENT_PREVIEW_HOVER3D      (124)
+#define EVENT_PREVIEW_SHIMMER      (125)
+#define EVENT_PREVIEW_RAINBOW      (126)
+#define EVENT_PREVIEW_SLOT         (127)
+#define EVENT_PREVIEW_PENDULUM     (128)
+#define EVENT_PREVIEW_SLAM         (129)
+#define EVENT_PREVIEW_VORTEX       (130)
+#define EVENT_PREVIEW_LETTERBOX      (131)
+#define EVENT_PREVIEW_LETTERBOX_EXIT (132)
+#define EVENT_PREVIEW_SONAR          (133)
+#define EVENT_PREVIEW_WAVESWEEP      (134)
+#define EVENT_PREVIEW_LETTERRAIN     (135)
+#define EVENT_PREVIEW_SCANNER        (136)
+#define EVENT_PREVIEW_ELECTRIC       (137)
+#define EVENT_PREVIEW_SPLITFLAP      (138)
+#define EVENT_PREVIEW_HOLOGRAM       (139)
+#define EVENT_PREVIEW_SHOCKWAVE      (140)
+#define EVENT_PREVIEW_WAVEMOTION     (141)
+#define EVENT_PREVIEW_HOPLETTER      (142)
 
 #define EVENT_CHAIN_SLIDE          (201)
 #define EVENT_CHAIN_PULSE          (202)
@@ -129,6 +168,9 @@ static stock PlayerText:gCounterTD[MAX_PLAYERS]   = {PlayerText:INVALID_TEXT_DRA
 static stock PlayerText:gSubtitleTD[MAX_PLAYERS]  = {PlayerText:INVALID_TEXT_DRAW, ...};
 static stock PlayerText:gSlideTD[MAX_PLAYERS]     = {PlayerText:INVALID_TEXT_DRAW, ...};
 static stock PlayerText:gProgressBarTD[MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+static stock PlayerText:gPreviewModelTD[MAX_PLAYERS] = {PlayerText:INVALID_TEXT_DRAW, ...};
+static stock PlayerText:gTopBarTD[MAX_PLAYERS]       = {PlayerText:INVALID_TEXT_DRAW, ...};
+static stock PlayerText:gBottomBarTD[MAX_PLAYERS]    = {PlayerText:INVALID_TEXT_DRAW, ...};
 
 // Server-wide Global TextDraw (Positioned at X=320.0, Y=365.0)
 static stock Text:gBroadcastTD = Text:INVALID_TEXT_DRAW;
@@ -167,7 +209,7 @@ static stock InitPlayerDemoTextDraws(playerid)
 	PlayerTextDrawTextSize(playerid, gCounterTD[playerid], 24.0, 280.0);
 
 	// 3. Subtitle Bar: X=320.0, Y=365.0 (Font 1, wide cinematic box for Scramble & Typewriter)
-	gSubtitleTD[playerid] = CreatePlayerTextDraw(playerid, 320.0, 365.0, "System ready. Select an effect from /tdfx.");
+	gSubtitleTD[playerid] = CreatePlayerTextDraw(playerid, 320.0, 340.0, "System ready. Select an effect from /tdfx.");
 	PlayerTextDrawAlignment(playerid, gSubtitleTD[playerid], TDFX_DEMO_ALIGN_CENTER);
 	PlayerTextDrawFont(playerid, gSubtitleTD[playerid], TDFX_DEMO_FONT_1);
 	PlayerTextDrawLetterSize(playerid, gSubtitleTD[playerid], 0.32, 1.40);
@@ -190,15 +232,38 @@ static stock InitPlayerDemoTextDraws(playerid)
 	PlayerTextDrawBoxColor(playerid, gSlideTD[playerid], 0x111111DD);
 	PlayerTextDrawTextSize(playerid, gSlideTD[playerid], 22.0, 380.0);
 
-	// 5. Dedicated Progress Bar: X=200.0, Y=382.0 (Left-aligned solid emerald bar)
-	gProgressBarTD[playerid] = CreatePlayerTextDraw(playerid, 200.0, 382.0, "_");
+	// 5. Dedicated Progress Bar: X=180.0, Y=380.0 (Left-aligned solid emerald bar, matching title box)
+	gProgressBarTD[playerid] = CreatePlayerTextDraw(playerid, 150.0, 380.0, "_");
 	PlayerTextDrawAlignment(playerid, gProgressBarTD[playerid], TDFX_DEMO_ALIGN_LEFT);
 	PlayerTextDrawFont(playerid, gProgressBarTD[playerid], TDFX_DEMO_FONT_1);
 	PlayerTextDrawLetterSize(playerid, gProgressBarTD[playerid], 0.0, 1.25);
 	PlayerTextDrawColor(playerid, gProgressBarTD[playerid], 0x2ECC7100);
 	PlayerTextDrawUseBox(playerid, gProgressBarTD[playerid], true);
 	PlayerTextDrawBoxColor(playerid, gProgressBarTD[playerid], 0x2ECC71EE);
-	PlayerTextDrawTextSize(playerid, gProgressBarTD[playerid], 200.0, 14.0);
+	PlayerTextDrawTextSize(playerid, gProgressBarTD[playerid], 150.0, 14.0);
+
+	// 6. 3D Model Preview: X=260.0, Y=310.0, Size=120.0, 90.0
+	gPreviewModelTD[playerid] = CreatePlayerTextDraw(playerid, 260.0, 310.0, "_");
+	PlayerTextDrawFont(playerid, gPreviewModelTD[playerid], 5);
+	PlayerTextDrawTextSize(playerid, gPreviewModelTD[playerid], 120.0, 90.0);
+	PlayerTextDrawSetPreviewModel(playerid, gPreviewModelTD[playerid], 411);
+	PlayerTextDrawSetPreviewRot(playerid, gPreviewModelTD[playerid], -15.0, 0.0, -45.0, 1.0);
+	PlayerTextDrawBackgroundColor(playerid, gPreviewModelTD[playerid], 0x00000000);
+
+	// 7. Top & Bottom Cinematic Letterbox Bars
+	gTopBarTD[playerid] = CreatePlayerTextDraw(playerid, 0.0, -80.0, "_");
+	PlayerTextDrawFont(playerid, gTopBarTD[playerid], 1);
+	PlayerTextDrawLetterSize(playerid, gTopBarTD[playerid], 0.0, 6.84);
+	PlayerTextDrawUseBox(playerid, gTopBarTD[playerid], true);
+	PlayerTextDrawBoxColor(playerid, gTopBarTD[playerid], 0x000000FF);
+	PlayerTextDrawTextSize(playerid, gTopBarTD[playerid], 640.0, 0.0);
+
+	gBottomBarTD[playerid] = CreatePlayerTextDraw(playerid, 0.0, 480.0, "_");
+	PlayerTextDrawFont(playerid, gBottomBarTD[playerid], 1);
+	PlayerTextDrawLetterSize(playerid, gBottomBarTD[playerid], 0.0, 9.50);
+	PlayerTextDrawUseBox(playerid, gBottomBarTD[playerid], true);
+	PlayerTextDrawBoxColor(playerid, gBottomBarTD[playerid], 0x000000FF);
+	PlayerTextDrawTextSize(playerid, gBottomBarTD[playerid], 640.0, 0.0);
 }
 
 static stock DestroyPlayerDemoTextDraws(playerid)
@@ -230,6 +295,21 @@ static stock DestroyPlayerDemoTextDraws(playerid)
 		PlayerTextDrawDestroy(playerid, gProgressBarTD[playerid]);
 		gProgressBarTD[playerid] = PlayerText:INVALID_TEXT_DRAW;
 	}
+	if (gPreviewModelTD[playerid] != PlayerText:INVALID_TEXT_DRAW)
+	{
+		PlayerTextDrawDestroy(playerid, gPreviewModelTD[playerid]);
+		gPreviewModelTD[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	}
+	if (gTopBarTD[playerid] != PlayerText:INVALID_TEXT_DRAW)
+	{
+		PlayerTextDrawDestroy(playerid, gTopBarTD[playerid]);
+		gTopBarTD[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	}
+	if (gBottomBarTD[playerid] != PlayerText:INVALID_TEXT_DRAW)
+	{
+		PlayerTextDrawDestroy(playerid, gBottomBarTD[playerid]);
+		gBottomBarTD[playerid] = PlayerText:INVALID_TEXT_DRAW;
+	}
 }
 
 // -----------------------------------------------------------------------------
@@ -239,8 +319,9 @@ static stock DestroyPlayerDemoTextDraws(playerid)
 stock ShowTDFXMenu(playerid)
 {
 	new current = gActivePreview[playerid];
-	new dialogContent[2200];
-	format(dialogContent, sizeof dialogContent,
+	static sDialogContent[4096];
+	sDialogContent[0] = '\0';
+	format(sDialogContent, sizeof sDialogContent,
 		"Effect\tDescription\tStatus\n\
 		{FFFFFF}True Alpha Fade\t0%% -> 100%% Opacity\t%s\n\
 		{FFFFFF}Color Cross-Fade\tGreen -> Red Alert Shift\t%s\n\
@@ -259,6 +340,26 @@ stock ShowTDFXMenu(playerid)
 		{FFFFFF}Waveform Drift\tHarmonic Dual-Sine Floating\t%s\n\
 		{FFFFFF}Dynamic Progress Fill\tSmooth Box Bar Fill with Easing\t%s\n\
 		{FFFFFF}Cyberpunk Glitch\tReal-time Glyph Disturbance\t%s\n\
+		{FFFFFF}Firework Text\tExploding Fragmentation FX\t%s\n\
+		{FFFFFF}3D Turntable Spin\tContinuous 360 Rotation\t%s\n\
+		{FFFFFF}3D Floating Tilt\tHarmonic 3D Hover & Pitch\t%s\n\
+		{FFFFFF}Golden Shimmer\tSweeping Chrome Highlight\t%s\n\
+		{FFFFFF}RGB Rainbow Wave\tDynamic 8-Stage Flowing Wave\t%s\n\
+		{FFFFFF}Casino Slot Machine\tMechanical Rolling Reel Lock\t%s\n\
+		{FFFFFF}Pendulum Swing\tDamped Gravity Arm Swing\t%s\n\
+		{FFFFFF}Gravity Drop Slam\tFreefall Acceleration & Impact\t%s\n\
+		{FFFFFF}Black Hole Vortex\tSpiral Suction Decay\t%s\n\
+		{FFFFFF}Cinematic Letterbox\t21:9 Cinema Black Bars\t%s\n\
+		{FFFFFF}Sonar Echo Ping\tSubmarine Radar Acoustic Pulse\t%s\n\
+		{FFFFFF}Traveling Wave Sweep\tFlowing Horizontal Wave Crest\t%s\n\
+		{FFFFFF}Falling Letter Rain\tGravity Drop Letter Assembly\t%s\n\
+		{FFFFFF}Scanner Laser Sweep\tKITT / Cylon Laser Sweep\t%s\n\
+		{FFFFFF}Electric Arc Surge\tShort-Circuit Sparks & Jitter\t%s\n\
+		{FFFFFF}Split-Flap Airport Board\tMechanical Rolling Solari Board\t%s\n\
+		{FFFFFF}Sci-Fi Hologram\tFuturistic Cyan Beam & Scanlines\t%s\n\
+		{FFFFFF}Shockwave Impact Slam\t3D Plummet, Trauma & Blast Ring\t%s\n\
+		{FFFFFF}Sinusoidal Wave Motion\tPhysical Traveling Arch Wave\t%s\n\
+		{FFFFFF}Letter Hopping Cascade\tStaggered Letter Jump & Bounce\t%s\n\
 		{FFFFFF}Global Broadcast\tServer-Wide Announcement TD\t%s\n\
 		{FFFFFF}Chained Cutscene\tAutomated 4-Stage Sequence\t%s\n\
 		{E74C3C}[Stop Active Effect]\tImmediately reset screen\t-",
@@ -279,6 +380,26 @@ stock ShowTDFXMenu(playerid)
 		(current == PREVIEW_WAVE)        ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
 		(current == PREVIEW_PROGRESS)    ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
 		(current == PREVIEW_GLITCH)      ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_FIREWORK)    ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_SPIN3D)      ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_HOVER3D)     ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_SHIMMER)     ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_RAINBOW)     ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_SLOT)        ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_PENDULUM)    ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_SLAM)        ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_VORTEX)      ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_LETTERBOX)   ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_SONAR)       ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_WAVESWEEP)   ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_LETTERRAIN)  ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_SCANNER)     ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_ELECTRIC)    ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_SPLITFLAP)   ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_HOLOGRAM)    ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_SHOCKWAVE)   ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_WAVEMOTION)  ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
+		(current == PREVIEW_HOPLETTER)   ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
 		gGlobalPreviewActive             ? ("{2ECC71}(Active)") : ("{7F8C8D}-"),
 		(current == PREVIEW_CHAIN)       ? ("{2ECC71}(Active)") : ("{7F8C8D}-")
 	);
@@ -287,8 +408,8 @@ stock ShowTDFXMenu(playerid)
 		playerid, 
 		DIALOG_TDFX_MENU, 
 		TDFX_DEMO_DLG_STYLE TDFX_DLG_TABLIST, 
-		"{3498DB}TextDrawFX {FFFFFF}v2.1 - Demonstration Suite", 
-		dialogContent, 
+		"{3498DB}TextDrawFX {FFFFFF}v" TEXTDRAWFX_VERSION_STRING " - Demonstration Suite", 
+		sDialogContent, 
 		"Select", 
 		"Close"
 	);
@@ -302,31 +423,39 @@ stock ShowTDFXMenu(playerid)
 stock StopCurrentPreview(playerid, bool:notify = false)
 {
 	new current = gActivePreview[playerid];
-	if (current == -1 && !gGlobalPreviewActive) return 0;
 
 	StopPlayerTextDrawFX(playerid, gTitleTD[playerid]);
 	StopPlayerTextDrawFX(playerid, gCounterTD[playerid]);
 	StopPlayerTextDrawFX(playerid, gSubtitleTD[playerid]);
 	StopPlayerTextDrawFX(playerid, gSlideTD[playerid]);
 	StopPlayerTextDrawFX(playerid, gProgressBarTD[playerid]);
+	StopPlayerTextDrawFX(playerid, gPreviewModelTD[playerid]);
+	StopPlayerTextDrawFX(playerid, gTopBarTD[playerid]);
+	StopPlayerTextDrawFX(playerid, gBottomBarTD[playerid]);
 
 	PlayerTextDrawHide(playerid, gTitleTD[playerid]);
 	PlayerTextDrawHide(playerid, gCounterTD[playerid]);
 	PlayerTextDrawHide(playerid, gSubtitleTD[playerid]);
 	PlayerTextDrawHide(playerid, gSlideTD[playerid]);
 	PlayerTextDrawHide(playerid, gProgressBarTD[playerid]);
+	PlayerTextDrawHide(playerid, gPreviewModelTD[playerid]);
+	PlayerTextDrawHide(playerid, gTopBarTD[playerid]);
+	PlayerTextDrawHide(playerid, gBottomBarTD[playerid]);
 
 	// Restore default positions and base colors for future shows
 	#if defined PlayerTextDrawSetPos
-		PlayerTextDrawSetPos(playerid, gTitleTD[playerid], 320.0, 365.0);
-		PlayerTextDrawSetPos(playerid, gCounterTD[playerid], 320.0, 365.0);
-		PlayerTextDrawSetPos(playerid, gSubtitleTD[playerid], 320.0, 365.0);
-		PlayerTextDrawSetPos(playerid, gSlideTD[playerid], 320.0, 365.0);
+		new Float:px, Float:py;
+		if (TDFX_GetPlayerPos(playerid, gTitleTD[playerid], px, py)) PlayerTextDrawSetPos(playerid, gTitleTD[playerid], px, py);
+		if (TDFX_GetPlayerPos(playerid, gCounterTD[playerid], px, py)) PlayerTextDrawSetPos(playerid, gCounterTD[playerid], px, py);
+		if (TDFX_GetPlayerPos(playerid, gSubtitleTD[playerid], px, py)) PlayerTextDrawSetPos(playerid, gSubtitleTD[playerid], px, py);
+		if (TDFX_GetPlayerPos(playerid, gSlideTD[playerid], px, py)) PlayerTextDrawSetPos(playerid, gSlideTD[playerid], px, py);
+		PlayerTextDrawSetPos(playerid, gTopBarTD[playerid], 0.0, -80.0);
+		PlayerTextDrawSetPos(playerid, gBottomBarTD[playerid], 0.0, 480.0);
 	#endif
 
 	PlayerTextDrawColor(playerid, gTitleTD[playerid], 0xFFFFFFFF);
 	PlayerTextDrawBoxColor(playerid, gTitleTD[playerid], 0x000000BB);
-	PlayerTextDrawTextSize(playerid, gTitleTD[playerid], 24.0, 420.0);
+	PlayerTextDrawTextSize(playerid, gTitleTD[playerid], 500.0, 340.0);
 
 	PlayerTextDrawColor(playerid, gCounterTD[playerid], 0x2ECC71FF);
 	PlayerTextDrawBoxColor(playerid, gCounterTD[playerid], 0x000000AA);
@@ -340,11 +469,11 @@ stock StopCurrentPreview(playerid, bool:notify = false)
 	PlayerTextDrawLetterSize(playerid, gSlideTD[playerid], 0.45, 1.80);
 	PlayerTextDrawColor(playerid, gSlideTD[playerid], 0xFFFFFFFF);
 	PlayerTextDrawBoxColor(playerid, gSlideTD[playerid], 0x111111DD);
-	PlayerTextDrawTextSize(playerid, gSlideTD[playerid], 22.0, 380.0);
+	PlayerTextDrawTextSize(playerid, gSlideTD[playerid], 500.0, 380.0);
 
 	PlayerTextDrawColor(playerid, gProgressBarTD[playerid], 0x2ECC7100);
 	PlayerTextDrawBoxColor(playerid, gProgressBarTD[playerid], 0x2ECC71EE);
-	PlayerTextDrawTextSize(playerid, gProgressBarTD[playerid], 200.0, 14.0);
+	PlayerTextDrawTextSize(playerid, gProgressBarTD[playerid], 150.0, 14.0);
 
 	if (current == PREVIEW_GLOBAL || gGlobalPreviewActive)
 	{
@@ -519,7 +648,7 @@ stock Start_Scramble(playerid)
 	ScramblePlayerTextDraw(
 		playerid, 
 		gSubtitleTD[playerid], 
-		"ACCESS GRANTED: TEXTDRAWFX v2.0 SYSTEM CORE INITIALIZED", 
+		"ACCESS GRANTED: TEXTDRAWFX v" TEXTDRAWFX_VERSION_STRING " SYSTEM CORE INITIALIZED", 
 		.duration = 2800, 
 		.extra_id = EVENT_PREVIEW_SCRAMBLE
 	);
@@ -567,14 +696,13 @@ stock Start_Typewriter(playerid)
 	PlayerTextDrawBoxColor(playerid, gSubtitleTD[playerid], 0x000000CC);
 	PlayerTextDrawShow(playerid, gSubtitleTD[playerid]);
 
-	BlinkPlayerTextDraw(
+	TypewriterPlayerTextDraw(
 		playerid, 
 		gSubtitleTD[playerid], 
+		"~y~Carl Johnson:~w~ Grove Street... home. At least it was before I messed everything up.",
 		.interval = 50, 
 		.duration = 4000, 
-		.perChar = true, 
-		.colour = 0, 
-		.text = "~y~Carl Johnson:~w~ Grove Street... home. At least it was before I messed everything up."
+		.extra_id = EVENT_PREVIEW_TYPEWRITER
 	);
 
 	SetTimerEx("TDFX_OnTypewriterFinish", 4500, false, "i", playerid);
@@ -603,6 +731,7 @@ stock Start_Bounce(playerid)
 		PlayerTextDrawSetString(playerid, gSlideTD[playerid], "~y~[DVD]~w~ TEXTDRAWFX");
 		PlayerTextDrawColor(playerid, gSlideTD[playerid], 0xF1C40FFF);
 		PlayerTextDrawBoxColor(playerid, gSlideTD[playerid], 0x111111DD);
+		PlayerTextDrawTextSize(playerid, gSlideTD[playerid], 20.0, 160.0);
 		PlayerTextDrawShow(playerid, gSlideTD[playerid]);
 
 		// Bounces within the bottom viewport area (X: 140..500, Y: 355..410) with DVD color shifts!
@@ -773,34 +902,35 @@ stock Start_Progress(playerid)
 	#if defined PlayerTextDrawSetPos
 		PlayerTextDrawSetPos(playerid, gTitleTD[playerid], 320.0, 356.0);
 	#endif
-	PlayerTextDrawSetString(playerid, gTitleTD[playerid], "DOWNLOADING RESOURCES [0%]");
+	PlayerTextDrawSetString(playerid, gTitleTD[playerid], "DOWNLOADING RESOURCES (0%)");
 	PlayerTextDrawColor(playerid, gTitleTD[playerid], 0xFFFFFFFF);
 	PlayerTextDrawBoxColor(playerid, gTitleTD[playerid], 0x000000BB);
-	PlayerTextDrawLetterSize(playerid, gTitleTD[playerid], 0.45, 1.80);
-	PlayerTextDrawTextSize(playerid, gTitleTD[playerid], 22.0, 360.0);
+	PlayerTextDrawLetterSize(playerid, gTitleTD[playerid], 0.36, 1.50);
+	// In SA-MP Alignment 2 (Center): param 1 is line wrap width (500.0 prevents wrapping!), param 2 is box width (340.0)
+	PlayerTextDrawTextSize(playerid, gTitleTD[playerid], 500.0, 340.0);
 	PlayerTextDrawShow(playerid, gTitleTD[playerid]);
 
-	// Synchronized numeric counter above the progress bar
+	// Synchronized numeric counter with safe parenthesis typography
 	CountPlayerTextDrawNumber(
 		playerid, 
 		gTitleTD[playerid], 
 		.startValue = 0, 
 		.targetValue = 100, 
 		.duration = 3200, 
-		.prefix = "DOWNLOADING RESOURCES [", 
-		.suffix = "%]"
+		.prefix = "DOWNLOADING RESOURCES (", 
+		.suffix = "%)"
 	);
 
-	// Setup and show dedicated progress bar
-	PlayerTextDrawTextSize(playerid, gProgressBarTD[playerid], 200.0, 14.0);
+	// Dedicated progress bar (starts at X=150.0, expands to X=490.0, perfectly matching 340px title box)
+	PlayerTextDrawTextSize(playerid, gProgressBarTD[playerid], 150.0, 14.0);
 	PlayerTextDrawShow(playerid, gProgressBarTD[playerid]);
 
-	// Native smooth progress bar expansion from X=200.0 to X=440.0 (width 240px)
+	// Native smooth progress bar expansion from X=150.0 to X=490.0 (width 340px)
 	FillPlayerTextDrawProgress(
 		playerid, 
 		gProgressBarTD[playerid], 
-		.startWidth = 200.0, 
-		.targetWidth = 440.0, 
+		.startWidth = 150.0, 
+		.targetWidth = 490.0, 
 		.duration = 3200, 
 		.easing = TDFX_EASE_OUT_QUAD, 
 		.lineHeight = 14.0, 
@@ -815,7 +945,11 @@ stock Start_Progress(playerid)
 stock Start_Glitch(playerid)
 {
 	#if defined PlayerTextDrawSetPos
-		PlayerTextDrawSetPos(playerid, gSubtitleTD[playerid], 320.0, 365.0);
+		new Float:gx, Float:gy;
+		if (TDFX_GetPlayerPos(playerid, gSubtitleTD[playerid], gx, gy))
+		{
+			PlayerTextDrawSetPos(playerid, gSubtitleTD[playerid], gx, gy);
+		}
 	#endif
 	PlayerTextDrawColor(playerid, gSubtitleTD[playerid], 0x00FF88FF);
 	PlayerTextDrawBoxColor(playerid, gSubtitleTD[playerid], 0x002211DD);
@@ -833,6 +967,411 @@ stock Start_Glitch(playerid)
 
 	gActivePreview[playerid] = PREVIEW_GLITCH;
 	SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Cyberpunk Chromatic Glitch started (Real-time glyph disturbance)...");
+	return 1;
+}
+
+static stock gFwPattern[MAX_PLAYERS] = {0, ...};
+
+stock Start_Firework(playerid)
+{
+	#if !defined PlayerTextDrawSetPos
+		SendClientMessage(playerid, -1, COLOR_TDFX_WARN "Firework Text requires open.mp or the YSF plugin.");
+	#else
+		new currentPattern = gFwPattern[playerid];
+		// Cycle patterns for successive tests: 0=Sphere, 1=Fan, 2=Rocket, 3=Ring, 4=Fountain
+		gFwPattern[playerid] = (gFwPattern[playerid] + 1) % 5;
+
+		PlayerTextDrawSetPos(playerid, gSlideTD[playerid], 320.0, 375.0);
+		PlayerTextDrawSetString(playerid, gSlideTD[playerid], "~y~* ~r~DETONATING... ~y~*");
+		PlayerTextDrawLetterSize(playerid, gSlideTD[playerid], 0.45, 1.80);
+		PlayerTextDrawColor(playerid, gSlideTD[playerid], 0xE74C3CFF);
+		PlayerTextDrawBoxColor(playerid, gSlideTD[playerid], 0x000000BB);
+		PlayerTextDrawTextSize(playerid, gSlideTD[playerid], 500.0, 260.0);
+		PlayerTextDrawShow(playerid, gSlideTD[playerid]);
+
+		FireworkPlayerTextDraw(
+			playerid, 
+			gSlideTD[playerid], 
+			.pattern = currentPattern, 
+			.fuseDuration = 1500, 
+			.explodeDuration = 1300, 
+			.shakeIntensity = 6.5, 
+			.burstSpeed = 6.0, 
+			.particleCount = 12, 
+			.extra_id = EVENT_PREVIEW_FIREWORK
+		);
+
+		gActivePreview[playerid] = PREVIEW_FIREWORK;
+
+		static const sFwNames[][] = {
+			"Spherical 360 Radial Blast",
+			"Upward Pyrotechnic Fan Spray",
+			"Ascending Rocket Tail Blast",
+			"Horizontal Shockwave Ring",
+			"Volcano Fountain Cascade"
+		};
+		new msg[128];
+		format(msg, sizeof msg, COLOR_TDFX_TAG "Firework Text started [Pattern: %s]...", sFwNames[currentPattern]);
+		SendClientMessage(playerid, -1, msg);
+	#endif
+	return 1;
+}
+
+
+stock Start_Spin3D(playerid)
+{
+	PlayerTextDrawSetPreviewModel(playerid, gPreviewModelTD[playerid], 411);
+	PlayerTextDrawSetPreviewRot(playerid, gPreviewModelTD[playerid], -15.0, 0.0, -45.0, 1.0);
+	PlayerTextDrawShow(playerid, gPreviewModelTD[playerid]);
+	Spin3DPlayerTextDraw(playerid, gPreviewModelTD[playerid], .speedZ = 50.0, .zoom = 1.0, .duration = 0, .extra_id = EVENT_PREVIEW_SPIN3D);
+	gActivePreview[playerid] = PREVIEW_SPIN3D;
+	SendClientMessage(playerid, -1, COLOR_TDFX_TAG "3D Turntable Spin started (Smooth continuous 360 rotation)...");
+	return 1;
+}
+
+stock Start_Hover3D(playerid)
+{
+	PlayerTextDrawSetPreviewModel(playerid, gPreviewModelTD[playerid], 1212);
+	PlayerTextDrawSetPreviewRot(playerid, gPreviewModelTD[playerid], -10.0, 0.0, 0.0, 1.1);
+	PlayerTextDrawShow(playerid, gPreviewModelTD[playerid]);
+	Hover3DPlayerTextDraw(playerid, gPreviewModelTD[playerid], .tiltX = 8.0, .tiltZ = 12.0, .zoomAmp = 0.08, .speedMs = 2200, .duration = 0, .extra_id = EVENT_PREVIEW_HOVER3D);
+	gActivePreview[playerid] = PREVIEW_HOVER3D;
+	SendClientMessage(playerid, -1, COLOR_TDFX_TAG "3D Floating Tilt started (Harmonic 3D hover & pitch)...");
+	return 1;
+}
+
+stock Start_Shimmer(playerid)
+{
+	#if defined PlayerTextDrawSetPos
+		PlayerTextDrawSetPos(playerid, gTitleTD[playerid], 320.0, 360.0);
+	#endif
+	PlayerTextDrawSetString(playerid, gTitleTD[playerid], "VIP PLATINUM MEMBER");
+	PlayerTextDrawColor(playerid, gTitleTD[playerid], 0xF1C40FFF);
+	PlayerTextDrawBoxColor(playerid, gTitleTD[playerid], 0x000000BB);
+	PlayerTextDrawLetterSize(playerid, gTitleTD[playerid], 0.45, 1.80);
+	PlayerTextDrawTextSize(playerid, gTitleTD[playerid], 500.0, 340.0);
+	PlayerTextDrawShow(playerid, gTitleTD[playerid]);
+
+	ShimmerPlayerTextDraw(playerid, gTitleTD[playerid], "VIP PLATINUM MEMBER", "~y~", "~w~", .sweepDuration = 1100, .pauseDuration = 1400, .duration = 0, .extra_id = EVENT_PREVIEW_SHIMMER);
+	gActivePreview[playerid] = PREVIEW_SHIMMER;
+	SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Golden Shimmer started (Sweeping chrome highlight ray)...");
+	return 1;
+}
+
+stock Start_Rainbow(playerid)
+{
+	#if defined PlayerTextDrawSetPos
+		PlayerTextDrawSetPos(playerid, gTitleTD[playerid], 320.0, 360.0);
+	#endif
+	PlayerTextDrawSetString(playerid, gTitleTD[playerid], "TEXTDRAWFX RAINBOW");
+	PlayerTextDrawBoxColor(playerid, gTitleTD[playerid], 0x000000BB);
+	PlayerTextDrawLetterSize(playerid, gTitleTD[playerid], 0.45, 1.80);
+	PlayerTextDrawTextSize(playerid, gTitleTD[playerid], 500.0, 340.0);
+	PlayerTextDrawShow(playerid, gTitleTD[playerid]);
+
+	RainbowPlayerTextDraw(playerid, gTitleTD[playerid], "TEXTDRAWFX RAINBOW", .speedMs = 120, .duration = 6000, .extra_id = EVENT_PREVIEW_RAINBOW);
+	gActivePreview[playerid] = PREVIEW_RAINBOW;
+	SendClientMessage(playerid, -1, COLOR_TDFX_TAG "RGB Rainbow Wave started (Flowing GTA chromatic spectrum)...");
+	return 1;
+}
+
+stock Start_Slot(playerid)
+{
+	#if defined PlayerTextDrawSetPos
+		PlayerTextDrawSetPos(playerid, gTitleTD[playerid], 320.0, 360.0);
+	#endif
+	PlayerTextDrawSetString(playerid, gTitleTD[playerid], "SPINNING REELS...");
+	PlayerTextDrawColor(playerid, gTitleTD[playerid], 0xF1C40FFF);
+	PlayerTextDrawBoxColor(playerid, gTitleTD[playerid], 0x000000BB);
+	PlayerTextDrawLetterSize(playerid, gTitleTD[playerid], 0.45, 1.80);
+	PlayerTextDrawTextSize(playerid, gTitleTD[playerid], 500.0, 340.0);
+	PlayerTextDrawShow(playerid, gTitleTD[playerid]);
+
+	SlotMachinePlayerTextDraw(playerid, gTitleTD[playerid], "$ 7 7 7 JACKPOT $", .spinDuration = 2400, .extra_id = EVENT_PREVIEW_SLOT);
+	gActivePreview[playerid] = PREVIEW_SLOT;
+	SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Casino Slot Machine started (Mechanical rolling reel lock)...");
+	return 1;
+}
+
+stock Start_Pendulum(playerid)
+{
+	#if !defined PlayerTextDrawSetPos
+		SendClientMessage(playerid, -1, COLOR_TDFX_WARN "Pendulum Swing requires open.mp or the YSF plugin.");
+	#else
+		PlayerTextDrawSetPos(playerid, gSlideTD[playerid], 320.0, 260.0);
+		PlayerTextDrawSetString(playerid, gSlideTD[playerid], "PENDULUM PHYSICS");
+		PlayerTextDrawLetterSize(playerid, gSlideTD[playerid], 0.45, 1.80);
+		PlayerTextDrawColor(playerid, gSlideTD[playerid], 0xF1C40FFF);
+		PlayerTextDrawBoxColor(playerid, gSlideTD[playerid], 0x111111DD);
+		PlayerTextDrawTextSize(playerid, gSlideTD[playerid], 500.0, 260.0);
+		PlayerTextDrawShow(playerid, gSlideTD[playerid]);
+
+		PendulumPlayerTextDraw(playerid, gSlideTD[playerid], 320.0, 260.0, .armLength = 95.0, .maxAngle = 45.0, .damping = 0.55, .duration = 4200, .extra_id = EVENT_PREVIEW_PENDULUM);
+		gActivePreview[playerid] = PREVIEW_PENDULUM;
+		SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Pendulum Swing started (Damped harmonic gravity swing)...");
+	#endif
+	return 1;
+}
+
+stock Start_Slam(playerid)
+{
+	#if !defined PlayerTextDrawSetPos
+		SendClientMessage(playerid, -1, COLOR_TDFX_WARN "Gravity Drop requires open.mp or the YSF plugin.");
+	#else
+		PlayerTextDrawSetPos(playerid, gTitleTD[playerid], 320.0, 40.0);
+		PlayerTextDrawSetString(playerid, gTitleTD[playerid], "HEAVY SLAM IMPACT!");
+		PlayerTextDrawLetterSize(playerid, gTitleTD[playerid], 0.48, 1.90);
+		PlayerTextDrawColor(playerid, gTitleTD[playerid], 0xE74C3CFF);
+		PlayerTextDrawBoxColor(playerid, gTitleTD[playerid], 0x000000BB);
+		PlayerTextDrawTextSize(playerid, gTitleTD[playerid], 500.0, 320.0);
+		PlayerTextDrawShow(playerid, gTitleTD[playerid]);
+
+		GravityDropPlayerTextDraw(playerid, gTitleTD[playerid], 40.0, 360.0, .elasticity = 0.40, .extra_id = EVENT_PREVIEW_SLAM);
+		gActivePreview[playerid] = PREVIEW_SLAM;
+		SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Gravity Drop started (Freefall acceleration & elastic impact)...");
+	#endif
+	return 1;
+}
+
+stock Start_Vortex(playerid)
+{
+	#if !defined PlayerTextDrawSetPos
+		SendClientMessage(playerid, -1, COLOR_TDFX_WARN "Black Hole Vortex requires open.mp or the YSF plugin.");
+	#else
+		PlayerTextDrawSetPos(playerid, gTitleTD[playerid], 440.0, 360.0);
+		PlayerTextDrawSetString(playerid, gTitleTD[playerid], "BLACK HOLE VORTEX");
+		PlayerTextDrawLetterSize(playerid, gTitleTD[playerid], 0.45, 1.80);
+		PlayerTextDrawColor(playerid, gTitleTD[playerid], 0x9B59B6FF);
+		PlayerTextDrawBoxColor(playerid, gTitleTD[playerid], 0x000000BB);
+		PlayerTextDrawTextSize(playerid, gTitleTD[playerid], 500.0, 300.0);
+		PlayerTextDrawShow(playerid, gTitleTD[playerid]);
+
+		VortexPlayerTextDraw(playerid, gTitleTD[playerid], 320.0, 360.0, .startRadius = 150.0, .spins = 1.6, .duration = 4500, .extra_id = EVENT_PREVIEW_VORTEX);
+		gActivePreview[playerid] = PREVIEW_VORTEX;
+		SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Black Hole Vortex started (Spiral suction & letter scale decay)...");
+	#endif
+	return 1;
+}
+
+stock Start_Letterbox(playerid)
+{
+	LetterboxPlayerTextDraw(playerid, gTopBarTD[playerid], gBottomBarTD[playerid], .barHeight = 65.0, .duration = 1500, .reverse = false, .extra_id = EVENT_PREVIEW_LETTERBOX);
+	#if defined PlayerTextDrawSetPos
+		PlayerTextDrawSetPos(playerid, gSubtitleTD[playerid], 320.0, 340.0);
+	#endif
+	PlayerTextDrawSetString(playerid, gSubtitleTD[playerid], "CHAPTER 1: THE EVOLUTION OF TEXTDRAWFX");
+	PlayerTextDrawLetterSize(playerid, gSubtitleTD[playerid], 0.32, 1.40);
+	PlayerTextDrawColor(playerid, gSubtitleTD[playerid], 0xFFFFFFFF);
+	PlayerTextDrawUseBox(playerid, gSubtitleTD[playerid], true);
+	PlayerTextDrawBoxColor(playerid, gSubtitleTD[playerid], 0x000000BB);
+	PlayerTextDrawTextSize(playerid, gSubtitleTD[playerid], 20.0, 520.0);
+	PlayerTextDrawSetOutline(playerid, gSubtitleTD[playerid], 1);
+	PlayerTextDrawShow(playerid, gSubtitleTD[playerid]);
+	FadeInPlayerTextDraw(playerid, gSubtitleTD[playerid], .duration = 1500, .fadeBox = true, .targetAlpha = 255);
+
+	gActivePreview[playerid] = PREVIEW_LETTERBOX;
+	SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Cinematic Letterbox started (21:9 Widescreen bars sliding in)...");
+	return 1;
+}
+
+forward OnDemoCinematicHoldEnd(playerid);
+public OnDemoCinematicHoldEnd(playerid)
+{
+	if (!IsPlayerConnected(playerid) || gActivePreview[playerid] != PREVIEW_LETTERBOX) return 0;
+	FadeOutPlayerTextDraw(playerid, gSubtitleTD[playerid], .duration = 1200, .autoHide = true);
+	LetterboxPlayerTextDraw(playerid, gTopBarTD[playerid], gBottomBarTD[playerid], .barHeight = 65.0, .duration = 1500, .reverse = true, .extra_id = EVENT_PREVIEW_LETTERBOX_EXIT);
+	return 1;
+}
+
+stock Start_Sonar(playerid)
+{
+	#if !defined PlayerTextDrawSetPos
+		SendClientMessage(playerid, -1, COLOR_TDFX_WARN "Sonar Echo Ping requires open.mp or the YSF plugin.");
+	#else
+		PlayerTextDrawSetPos(playerid, gSlideTD[playerid], 320.0, 360.0);
+		PlayerTextDrawSetString(playerid, gSlideTD[playerid], "(( RADAR PING ))");
+		PlayerTextDrawLetterSize(playerid, gSlideTD[playerid], 0.45, 1.80);
+		PlayerTextDrawColor(playerid, gSlideTD[playerid], 0x2ECC71FF);
+		PlayerTextDrawBoxColor(playerid, gSlideTD[playerid], 0x000000BB);
+		PlayerTextDrawTextSize(playerid, gSlideTD[playerid], 500.0, 260.0);
+		PlayerTextDrawShow(playerid, gSlideTD[playerid]);
+
+		SonarPingPlayerTextDraw(playerid, gSlideTD[playerid], 320.0, 360.0, .maxRadius = 140.0, .pulseCount = 3, .pulseDuration = 1300, .extra_id = EVENT_PREVIEW_SONAR);
+		gActivePreview[playerid] = PREVIEW_SONAR;
+		SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Sonar Echo Ping started (Submarine acoustic pulse & wave decay)...");
+	#endif
+	return 1;
+}
+
+stock Start_WaveSweep(playerid)
+{
+	#if defined PlayerTextDrawSetPos
+		PlayerTextDrawSetPos(playerid, gTitleTD[playerid], 320.0, 360.0);
+	#endif
+	PlayerTextDrawSetString(playerid, gTitleTD[playerid], "TEXTDRAWFX WAVE CREST");
+	PlayerTextDrawLetterSize(playerid, gTitleTD[playerid], 0.45, 1.80);
+	PlayerTextDrawColor(playerid, gTitleTD[playerid], 0x3498DBFF);
+	PlayerTextDrawBoxColor(playerid, gTitleTD[playerid], 0x000000BB);
+	PlayerTextDrawTextSize(playerid, gTitleTD[playerid], 500.0, 340.0);
+	PlayerTextDrawShow(playerid, gTitleTD[playerid]);
+
+	WaveSweepPlayerTextDraw(playerid, gTitleTD[playerid], "TEXTDRAWFX WAVE CREST", .crestTag = "~w~", .baseTag = "~b~", .crestWidth = 3, .direction = TDFX_DIR_LEFT_TO_RIGHT, .speedMs = 70, .duration = 6000, .extra_id = EVENT_PREVIEW_WAVESWEEP);
+	gActivePreview[playerid] = PREVIEW_WAVESWEEP;
+	SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Traveling Wave Sweep started (Left -> Right wave ripple across letters)...");
+	return 1;
+}
+
+stock Start_LetterRain(playerid)
+{
+	#if !defined PlayerTextDrawSetPos
+		SendClientMessage(playerid, -1, COLOR_TDFX_WARN "Letter Rain requires open.mp or the YSF plugin.");
+	#else
+		PlayerTextDrawSetPos(playerid, gTitleTD[playerid], 320.0, 360.0);
+		PlayerTextDrawSetString(playerid, gTitleTD[playerid], "VICTORY ROYALE");
+		PlayerTextDrawLetterSize(playerid, gTitleTD[playerid], 0.45, 1.80);
+		PlayerTextDrawColor(playerid, gTitleTD[playerid], 0xF1C40FFF);
+		PlayerTextDrawBoxColor(playerid, gTitleTD[playerid], 0x000000BB);
+		PlayerTextDrawTextSize(playerid, gTitleTD[playerid], 500.0, 320.0);
+		PlayerTextDrawShow(playerid, gTitleTD[playerid]);
+
+		LetterRainPlayerTextDraw(playerid, gTitleTD[playerid], "VICTORY ROYALE", 320.0, 360.0, .letterSpacing = 0.0, .duration = 3200, .extra_id = EVENT_PREVIEW_LETTERRAIN);
+		gActivePreview[playerid] = PREVIEW_LETTERRAIN;
+		SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Falling Letter Rain started (Letters falling with gravity & landing bounce)...");
+	#endif
+	return 1;
+}
+
+stock Start_Scanner(playerid)
+{
+	#if defined PlayerTextDrawSetPos
+		PlayerTextDrawSetPos(playerid, gTitleTD[playerid], 320.0, 360.0);
+	#endif
+	PlayerTextDrawSetString(playerid, gTitleTD[playerid], "CYLON SCANNER ONLINE");
+	PlayerTextDrawLetterSize(playerid, gTitleTD[playerid], 0.42, 1.75);
+	PlayerTextDrawColor(playerid, gTitleTD[playerid], 0xE74C3CFF);
+	PlayerTextDrawBoxColor(playerid, gTitleTD[playerid], 0x000000CC);
+	PlayerTextDrawTextSize(playerid, gTitleTD[playerid], 500.0, 340.0);
+	PlayerTextDrawShow(playerid, gTitleTD[playerid]);
+
+	ScannerSweepPlayerTextDraw(playerid, gTitleTD[playerid], "CYLON SCANNER ONLINE", .laserTag = "~r~", .trailTag = "~y~", .speedMs = 65, .duration = 6000, .extra_id = EVENT_PREVIEW_SCANNER);
+	gActivePreview[playerid] = PREVIEW_SCANNER;
+	SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Scanner Laser Sweep started (Knight Rider continuous ping-pong laser beam)...");
+	return 1;
+}
+
+stock Start_Electric(playerid)
+{
+	#if !defined PlayerTextDrawSetPos
+		SendClientMessage(playerid, -1, COLOR_TDFX_WARN "Electric Arc requires open.mp or the YSF plugin.");
+	#else
+		PlayerTextDrawSetPos(playerid, gSubtitleTD[playerid], 320.0, 340.0);
+		PlayerTextDrawSetString(playerid, gSubtitleTD[playerid], "HIGH VOLTAGE GRID OVERLOAD");
+		PlayerTextDrawLetterSize(playerid, gSubtitleTD[playerid], 0.35, 1.45);
+		PlayerTextDrawColor(playerid, gSubtitleTD[playerid], 0x00FFFFFF);
+		PlayerTextDrawBoxColor(playerid, gSubtitleTD[playerid], 0x002233DD);
+		PlayerTextDrawShow(playerid, gSubtitleTD[playerid]);
+
+		ElectricArcPlayerTextDraw(playerid, gSubtitleTD[playerid], "HIGH VOLTAGE GRID OVERLOAD", .surgeDuration = 3200, .extra_id = EVENT_PREVIEW_ELECTRIC);
+		gActivePreview[playerid] = PREVIEW_ELECTRIC;
+		SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Electric Arc Surge started (Sparks, voltage jitter & circuit settling)...");
+	#endif
+	return 1;
+}
+
+stock Start_SplitFlap(playerid)
+{
+	#if defined PlayerTextDrawSetPos
+		PlayerTextDrawSetPos(playerid, gTitleTD[playerid], 320.0, 360.0);
+	#endif
+	PlayerTextDrawSetString(playerid, gTitleTD[playerid], "FLIGHT TO LOS SANTOS");
+	PlayerTextDrawLetterSize(playerid, gTitleTD[playerid], 0.40, 1.65);
+	PlayerTextDrawColor(playerid, gTitleTD[playerid], 0xFFFFFFFF);
+	PlayerTextDrawBoxColor(playerid, gTitleTD[playerid], 0x111111EE);
+	PlayerTextDrawTextSize(playerid, gTitleTD[playerid], 500.0, 350.0);
+	PlayerTextDrawShow(playerid, gTitleTD[playerid]);
+
+	SplitFlapPlayerTextDraw(playerid, gTitleTD[playerid], "FLIGHT TO LOS SANTOS", .charRollMs = 70, .lockIntervalMs = 150, .extra_id = EVENT_PREVIEW_SPLITFLAP);
+	gActivePreview[playerid] = PREVIEW_SPLITFLAP;
+	SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Split-Flap Airport Board started (Vintage Solari mechanical letter flip)...");
+	return 1;
+}
+
+stock Start_Hologram(playerid)
+{
+	#if !defined PlayerTextDrawSetPos
+		SendClientMessage(playerid, -1, COLOR_TDFX_WARN "Hologram requires open.mp or the YSF plugin.");
+	#else
+		PlayerTextDrawSetPos(playerid, gSubtitleTD[playerid], 320.0, 340.0);
+		PlayerTextDrawSetString(playerid, gSubtitleTD[playerid], "HOLO-COMMS: TRANSMISSION INCOMING");
+		PlayerTextDrawLetterSize(playerid, gSubtitleTD[playerid], 0.35, 1.45);
+		PlayerTextDrawColor(playerid, gSubtitleTD[playerid], 0x00FFFFFF);
+		PlayerTextDrawBoxColor(playerid, gSubtitleTD[playerid], 0x000000BB);
+		PlayerTextDrawShow(playerid, gSubtitleTD[playerid]);
+
+		HologramPlayerTextDraw(playerid, gSubtitleTD[playerid], "HOLO-COMMS: TRANSMISSION INCOMING", .duration = 5500, .extra_id = EVENT_PREVIEW_HOLOGRAM);
+		gActivePreview[playerid] = PREVIEW_HOLOGRAM;
+		SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Sci-Fi Hologram started (Cyan alpha modulation, scanlines & beam jitter)...");
+	#endif
+	return 1;
+}
+
+stock Start_Shockwave(playerid)
+{
+	#if !defined PlayerTextDrawSetPos
+		SendClientMessage(playerid, -1, COLOR_TDFX_WARN "Shockwave Slam requires open.mp or the YSF plugin.");
+	#else
+		PlayerTextDrawSetPos(playerid, gTitleTD[playerid], 320.0, 360.0);
+		PlayerTextDrawSetString(playerid, gTitleTD[playerid], "IMPACT SLAM");
+		PlayerTextDrawLetterSize(playerid, gTitleTD[playerid], 0.50, 2.0);
+		PlayerTextDrawColor(playerid, gTitleTD[playerid], 0xE74C3CFF);
+		PlayerTextDrawBoxColor(playerid, gTitleTD[playerid], 0x000000BB);
+		PlayerTextDrawTextSize(playerid, gTitleTD[playerid], 500.0, 280.0);
+		PlayerTextDrawShow(playerid, gTitleTD[playerid]);
+
+		ShockwaveSlamPlayerTextDraw(playerid, gTitleTD[playerid], 320.0, 360.0, .duration = 2000, .extra_id = EVENT_PREVIEW_SHOCKWAVE);
+		gActivePreview[playerid] = PREVIEW_SHOCKWAVE;
+		SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Shockwave Impact Slam started (3D scale plummet, impact trauma & blast ring)...");
+	#endif
+	return 1;
+}
+
+stock Start_WaveMotion(playerid)
+{
+	#if !defined PlayerTextDrawSetPos
+		SendClientMessage(playerid, -1, COLOR_TDFX_WARN "Wave Motion requires open.mp or the YSF plugin.");
+	#else
+		PlayerTextDrawSetPos(playerid, gTitleTD[playerid], 320.0, 360.0);
+		PlayerTextDrawSetString(playerid, gTitleTD[playerid], "OCEAN WAVE MOTION");
+		PlayerTextDrawLetterSize(playerid, gTitleTD[playerid], 0.45, 1.80);
+		PlayerTextDrawColor(playerid, gTitleTD[playerid], 0x3498DBFF);
+		PlayerTextDrawBoxColor(playerid, gTitleTD[playerid], 0x000000BB);
+		PlayerTextDrawTextSize(playerid, gTitleTD[playerid], 500.0, 340.0);
+		PlayerTextDrawShow(playerid, gTitleTD[playerid]);
+
+		WaveMotionPlayerTextDraw(playerid, gTitleTD[playerid], "OCEAN WAVE MOTION", 320.0, 360.0, .crestHeight = 15.0, .crestWidth = 2.8, .direction = TDFX_DIR_LEFT_TO_RIGHT, .duration = 3200, .extra_id = EVENT_PREVIEW_WAVEMOTION);
+		gActivePreview[playerid] = PREVIEW_WAVEMOTION;
+		SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Sinusoidal Wave Motion started (Physical traveling arch crest across letters)...");
+	#endif
+	return 1;
+}
+
+stock Start_HopLetter(playerid)
+{
+	#if !defined PlayerTextDrawSetPos
+		SendClientMessage(playerid, -1, COLOR_TDFX_WARN "Hop Letter requires open.mp or the YSF plugin.");
+	#else
+		PlayerTextDrawSetPos(playerid, gTitleTD[playerid], 320.0, 360.0);
+		PlayerTextDrawSetString(playerid, gTitleTD[playerid], "BOUNCING HOP LETTERS");
+		PlayerTextDrawLetterSize(playerid, gTitleTD[playerid], 0.45, 1.80);
+		PlayerTextDrawColor(playerid, gTitleTD[playerid], 0x2ECC71FF);
+		PlayerTextDrawBoxColor(playerid, gTitleTD[playerid], 0x000000BB);
+		PlayerTextDrawTextSize(playerid, gTitleTD[playerid], 500.0, 360.0);
+		PlayerTextDrawShow(playerid, gTitleTD[playerid]);
+
+		HopLetterPlayerTextDraw(playerid, gTitleTD[playerid], "BOUNCING HOP LETTERS", 320.0, 360.0, .hopHeight = 16.0, .staggerMs = 90, .hopDurationMs = 340, .direction = TDFX_DIR_LEFT_TO_RIGHT, .extra_id = EVENT_PREVIEW_HOPLETTER);
+		gActivePreview[playerid] = PREVIEW_HOPLETTER;
+		SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Letter Hopping Cascade started (Staggered letter jump with elastic settle)...");
+	#endif
 	return 1;
 }
 
@@ -980,7 +1519,7 @@ public OnPlayerTextDrawFXFinish(playerid, PlayerText:textid, fx_type, extra_id)
 		case EVENT_PREVIEW_PROGRESS:
 		{
 			PlayerPlaySound(playerid, 1057, 0.0, 0.0, 0.0);
-			PlayerTextDrawSetString(playerid, gTitleTD[playerid], "~g~DOWNLOAD COMPLETE! [100%]");
+			PlayerTextDrawSetString(playerid, gTitleTD[playerid], "~g~DOWNLOAD COMPLETE! (100%)");
 			FadeOutPlayerTextDraw(playerid, gTitleTD[playerid], .duration = 1200, .extra_id = EVENT_AUTO_CLEANUP, .autoHide = true);
 			FadeOutPlayerTextDraw(playerid, gProgressBarTD[playerid], .duration = 1200, .extra_id = 0, .autoHide = true);
 		}
@@ -988,6 +1527,119 @@ public OnPlayerTextDrawFXFinish(playerid, PlayerText:textid, fx_type, extra_id)
 		case EVENT_PREVIEW_GLITCH:
 		{
 			FadeOutPlayerTextDraw(playerid, gSubtitleTD[playerid], .duration = 1000, .extra_id = EVENT_AUTO_CLEANUP, .autoHide = true);
+		}
+
+		case EVENT_PREVIEW_FIREWORK:
+		{
+			PlayerTextDrawHide(playerid, gSlideTD[playerid]);
+			gActivePreview[playerid] = -1;
+			SendClientMessage(playerid, -1, COLOR_TDFX_SUCCESS "Firework explosion preview completed.");
+		}
+
+		case EVENT_PREVIEW_RAINBOW:
+		{
+			FadeOutPlayerTextDraw(playerid, gTitleTD[playerid], .duration = 1200, .extra_id = EVENT_AUTO_CLEANUP, .autoHide = true);
+			SendClientMessage(playerid, -1, COLOR_TDFX_SUCCESS "RGB Rainbow Wave preview completed.");
+		}
+
+		case EVENT_PREVIEW_SLOT:
+		{
+			FadeOutPlayerTextDraw(playerid, gTitleTD[playerid], .duration = 1200, .extra_id = EVENT_AUTO_CLEANUP, .autoHide = true);
+			SendClientMessage(playerid, -1, COLOR_TDFX_SUCCESS "Casino Slot Machine jackpot lock completed!");
+		}
+
+		case EVENT_PREVIEW_PENDULUM:
+		{
+			FadeOutPlayerTextDraw(playerid, gSlideTD[playerid], .duration = 1200, .extra_id = EVENT_AUTO_CLEANUP, .autoHide = true);
+			SendClientMessage(playerid, -1, COLOR_TDFX_SUCCESS "Pendulum swing settled at rest position.");
+		}
+
+		case EVENT_PREVIEW_SLAM:
+		{
+			FadeOutPlayerTextDraw(playerid, gTitleTD[playerid], .duration = 1200, .extra_id = EVENT_AUTO_CLEANUP, .autoHide = true);
+			SendClientMessage(playerid, -1, COLOR_TDFX_SUCCESS "Gravity Drop slam impact and bounces completed.");
+		}
+
+		case EVENT_PREVIEW_VORTEX:
+		{
+			gActivePreview[playerid] = -1;
+			SendClientMessage(playerid, -1, COLOR_TDFX_SUCCESS "Black Hole Vortex suction sequence completed.");
+		}
+
+		case EVENT_PREVIEW_LETTERBOX:
+		{
+			SetTimerEx("OnDemoCinematicHoldEnd", 4500, false, "i", playerid);
+			SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Cinematic scene active (Displaying for 4.5s)...");
+		}
+
+		case EVENT_PREVIEW_LETTERBOX_EXIT:
+		{
+			PlayerTextDrawHide(playerid, gTopBarTD[playerid]);
+			PlayerTextDrawHide(playerid, gBottomBarTD[playerid]);
+			PlayerTextDrawHide(playerid, gSubtitleTD[playerid]);
+			gActivePreview[playerid] = -1;
+			SendClientMessage(playerid, -1, COLOR_TDFX_SUCCESS "Cinematic Letterbox preview completed.");
+		}
+
+		case EVENT_PREVIEW_SONAR:
+		{
+			PlayerTextDrawHide(playerid, gSlideTD[playerid]);
+			gActivePreview[playerid] = -1;
+			SendClientMessage(playerid, -1, COLOR_TDFX_SUCCESS "Sonar Echo Ping 3-wave cycle completed.");
+		}
+
+		case EVENT_PREVIEW_WAVESWEEP:
+		{
+			FadeOutPlayerTextDraw(playerid, gTitleTD[playerid], .duration = 1200, .extra_id = EVENT_AUTO_CLEANUP, .autoHide = true);
+			SendClientMessage(playerid, -1, COLOR_TDFX_SUCCESS "Traveling Wave Sweep preview completed.");
+		}
+
+		case EVENT_PREVIEW_LETTERRAIN:
+		{
+			FadeOutPlayerTextDraw(playerid, gTitleTD[playerid], .duration = 1400, .extra_id = EVENT_AUTO_CLEANUP, .autoHide = true);
+			SendClientMessage(playerid, -1, COLOR_TDFX_SUCCESS "Falling Letter Rain preview completed (Word assembled).");
+		}
+
+		case EVENT_PREVIEW_SCANNER:
+		{
+			FadeOutPlayerTextDraw(playerid, gTitleTD[playerid], .duration = 1200, .extra_id = EVENT_AUTO_CLEANUP, .autoHide = true);
+			SendClientMessage(playerid, -1, COLOR_TDFX_SUCCESS "Scanner Laser Sweep preview completed.");
+		}
+
+		case EVENT_PREVIEW_ELECTRIC:
+		{
+			FadeOutPlayerTextDraw(playerid, gSubtitleTD[playerid], .duration = 1200, .extra_id = EVENT_AUTO_CLEANUP, .autoHide = true);
+			SendClientMessage(playerid, -1, COLOR_TDFX_SUCCESS "Electric Arc Surge preview completed.");
+		}
+
+		case EVENT_PREVIEW_SPLITFLAP:
+		{
+			FadeOutPlayerTextDraw(playerid, gTitleTD[playerid], .duration = 1400, .extra_id = EVENT_AUTO_CLEANUP, .autoHide = true);
+			SendClientMessage(playerid, -1, COLOR_TDFX_SUCCESS "Split-Flap mechanical board preview completed.");
+		}
+
+		case EVENT_PREVIEW_HOLOGRAM:
+		{
+			FadeOutPlayerTextDraw(playerid, gSubtitleTD[playerid], .duration = 1200, .extra_id = EVENT_AUTO_CLEANUP, .autoHide = true);
+			SendClientMessage(playerid, -1, COLOR_TDFX_SUCCESS "Sci-Fi Hologram projection preview completed.");
+		}
+
+		case EVENT_PREVIEW_SHOCKWAVE:
+		{
+			FadeOutPlayerTextDraw(playerid, gTitleTD[playerid], .duration = 1200, .extra_id = EVENT_AUTO_CLEANUP, .autoHide = true);
+			SendClientMessage(playerid, -1, COLOR_TDFX_SUCCESS "Shockwave Impact Slam preview completed.");
+		}
+
+		case EVENT_PREVIEW_WAVEMOTION:
+		{
+			FadeOutPlayerTextDraw(playerid, gTitleTD[playerid], .duration = 1200, .extra_id = EVENT_AUTO_CLEANUP, .autoHide = true);
+			SendClientMessage(playerid, -1, COLOR_TDFX_SUCCESS "Sinusoidal Wave Motion preview completed.");
+		}
+
+		case EVENT_PREVIEW_HOPLETTER:
+		{
+			FadeOutPlayerTextDraw(playerid, gTitleTD[playerid], .duration = 1200, .extra_id = EVENT_AUTO_CLEANUP, .autoHide = true);
+			SendClientMessage(playerid, -1, COLOR_TDFX_SUCCESS "Letter Hopping Cascade preview completed.");
 		}
 
 		case EVENT_AUTO_CLEANUP:
@@ -1076,7 +1728,7 @@ public OnTextDrawFXFinish(Text:textid, fx_type, extra_id)
 public OnFilterScriptInit()
 {
 	print("\n==================================================");
-	print("  TextDrawFX v2.1 - Demonstration Suite Loaded    ");
+	print("  TextDrawFX v" TEXTDRAWFX_VERSION_STRING " - Demonstration Suite Loaded    ");
 	print("  Use /tdfx or /txdfx to open interactive menu    ");
 	print("==================================================\n");
 
@@ -1096,11 +1748,16 @@ public OnFilterScriptInit()
 		foreach (new i : Player)
 		{
 			InitPlayerDemoTextDraws(i);
+			SendWelcomeMessage(i);
 		}
 	#else
 		for (new i = 0; i < MAX_PLAYERS; i++)
 		{
-			if (IsPlayerConnected(i)) InitPlayerDemoTextDraws(i);
+			if (IsPlayerConnected(i))
+			{
+				InitPlayerDemoTextDraws(i);
+				SendWelcomeMessage(i);
+			}
 		}
 	#endif
 	return 1;
@@ -1130,9 +1787,22 @@ public OnFilterScriptExit()
 	return 1;
 }
 
+stock SendWelcomeMessage(playerid)
+{
+	SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Welcome to {3498DB}TextDrawFX v" TEXTDRAWFX_VERSION_STRING "{FFFFFF}!");
+	SendClientMessage(playerid, -1, COLOR_TDFX_TAG "Type {F1C40F}/tdfx{FFFFFF} or {F1C40F}/txdfx{FFFFFF} to open the visual animations showcase menu.");
+	return 1;
+}
+
 public OnPlayerConnect(playerid)
 {
 	InitPlayerDemoTextDraws(playerid);
+	return 1;
+}
+
+public OnPlayerSpawn(playerid)
+{
+	SendWelcomeMessage(playerid);
 	return 1;
 }
 
@@ -1192,6 +1862,26 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			case PREVIEW_WAVE:        Start_Wave(playerid);
 			case PREVIEW_PROGRESS:    Start_Progress(playerid);
 			case PREVIEW_GLITCH:      Start_Glitch(playerid);
+			case PREVIEW_FIREWORK:    Start_Firework(playerid);
+			case PREVIEW_SPIN3D:      Start_Spin3D(playerid);
+			case PREVIEW_HOVER3D:     Start_Hover3D(playerid);
+			case PREVIEW_SHIMMER:     Start_Shimmer(playerid);
+			case PREVIEW_RAINBOW:     Start_Rainbow(playerid);
+			case PREVIEW_SLOT:        Start_Slot(playerid);
+			case PREVIEW_PENDULUM:    Start_Pendulum(playerid);
+			case PREVIEW_SLAM:        Start_Slam(playerid);
+			case PREVIEW_VORTEX:      Start_Vortex(playerid);
+			case PREVIEW_LETTERBOX:   Start_Letterbox(playerid);
+			case PREVIEW_SONAR:       Start_Sonar(playerid);
+			case PREVIEW_WAVESWEEP:   Start_WaveSweep(playerid);
+			case PREVIEW_LETTERRAIN:  Start_LetterRain(playerid);
+			case PREVIEW_SCANNER:     Start_Scanner(playerid);
+			case PREVIEW_ELECTRIC:    Start_Electric(playerid);
+			case PREVIEW_SPLITFLAP:   Start_SplitFlap(playerid);
+			case PREVIEW_HOLOGRAM:    Start_Hologram(playerid);
+			case PREVIEW_SHOCKWAVE:   Start_Shockwave(playerid);
+			case PREVIEW_WAVEMOTION:  Start_WaveMotion(playerid);
+			case PREVIEW_HOPLETTER:   Start_HopLetter(playerid);
 			case PREVIEW_GLOBAL:      Start_Global(playerid);
 			case PREVIEW_CHAIN:       Start_Chain(playerid);
 		}
@@ -1204,14 +1894,16 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 }
 
 // -----------------------------------------------------------------------------
-// Pawn.CMD Commands
+// Standard SA-MP Command Handling
 // -----------------------------------------------------------------------------
 
-cmd:tdfx(playerid, params[])
+public OnPlayerCommandText(playerid, cmdtext[])
 {
-	#pragma unused params
-	ShowTDFXMenu(playerid);
-	return 1;
+	if (!strcmp(cmdtext, "/tdfx", true) || !strcmp(cmdtext, "/txdfx", true))
+	{
+		ShowTDFXMenu(playerid);
+		return 1;
+	}
+	return 0;
 }
-alias:tdfx("txdfx")
 

@@ -1,0 +1,48 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "*"
+      - "*/*"
+      - "**"
+  pull_request:
+    branches:
+      - "*"
+      - "*/*"
+      - "**"
+
+jobs:
+  build-package:
+    name: Build & Package TextDrawFX
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          clean: true
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Prepare Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path package | Out-Null
+
+          # Copy Library Include, Demo script, Demo AMX, and License
+          if (Test-Path "TextDrawFX.inc") { Copy-Item "TextDrawFX.inc" "package/TextDrawFX.inc" -Force }
+          if (Test-Path "FS_TextDrawFX_Demo.pwn") { Copy-Item "FS_TextDrawFX_Demo.pwn" "package/FS_TextDrawFX_Demo.pwn" -Force }
+          if (Test-Path "FS_TextDrawFX_Demo.amx") { Copy-Item "FS_TextDrawFX_Demo.amx" "package/FS_TextDrawFX_Demo.amx" -Force }
+          if (Test-Path "LICENSE") { Copy-Item "LICENSE" "package/LICENSE" -Force }
+
+      - name: Compress Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Compress-Archive -Path package/* -DestinationPath dist/TextDrawFX.zip -Force
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: TextDrawFX
+          path: dist/TextDrawFX.zip
